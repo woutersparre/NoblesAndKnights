@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d36274ff1fffeb04a8efbb7e1599b400, type: 3}
+  m_Name: Badman's Wife
+  m_EditorClassIdentifier: 
+  CharacterName: Victoria Arundel
+  age: 33
+  Portrait: {fileID: -7369102454132840799, guid: 65f0c095e2a2e814499c9acfd9e547fc, type: 3}
+  Spouse: {fileID: 11400000, guid: 998a3f392336b1e4e9702e7ed4691f5f, type: 2}
+  Wealth: 100
+  Gender: 1
+  Stats:
+    Diplomacy: 10
+    Martial: 10
+    Stewardship: 10
+    Intrigue: 10
+    Learning: 10
+    CombatStrenght: 10
+  Traits:
+  - {fileID: 11400000, guid: 033e3a7350201a54b8faec65755fba15, type: 2}
+  - {fileID: 11400000, guid: 06577e677a78f8b42aade89af244baa6, type: 2}

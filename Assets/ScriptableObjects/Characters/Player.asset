@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d36274ff1fffeb04a8efbb7e1599b400, type: 3}
+  m_Name: Player
+  m_EditorClassIdentifier: 
+  CharacterName: Patrick Hernandez
+  age: 33
+  Portrait: {fileID: -7233834642841857246, guid: 30c0b0de0b507d048a6d702bf6941401, type: 3}
+  Spouse: {fileID: 0}
+  Wealth: 100
+  Gender: 0
+  Stats:
+    Diplomacy: 10
+    Martial: 10
+    Stewardship: 10
+    Intrigue: 10
+    Learning: 10
+    CombatStrenght: 10
+  Traits:
+  - {fileID: 11400000, guid: 8d5218800f212d3429361267b1b30fbf, type: 2}
+  - {fileID: 11400000, guid: 9a4cd3102b521fb47a95a1f3e1c37d1b, type: 2}
+  Relations:
+  - CreateTarget: 0
+    targetSO: {fileID: 11400000, guid: 6291ea7dc6691de438856ce7003ecc0b, type: 2}
+    TargetCharacter:
+      Name: 
+      Wealth: 0
+      Reknown: 0
+      Piety: 0
+      Portrait: {fileID: 0}
+      BaseStats:
+        Diplomacy: 0
+        Martial: 0
+        Stewardship: 0
+        Intrigue: 0
+        Learning: 0
+        CombatStrenght: 0
+      Stats:
+        Diplomacy: 0
+        Martial: 0
+        Stewardship: 0
+        Intrigue: 0
+        Learning: 0
+        CombatStrenght: 0
+      Traits: []
+      Gender: 0
+      Relations: []
+    Type: 0
+    Strength: 50
+    History: 
+  - CreateTarget: 0
+    targetSO: {fileID: 11400000, guid: f4919f32e6f2701459b5a9a130331198, type: 2}
+    TargetCharacter:
+      Name: 
+      Wealth: 0
+      Reknown: 0
+      Piety: 0
+      Portrait: {fileID: 0}
+      BaseStats:
+        Diplomacy: 0
+        Martial: 0
+        Stewardship: 0
+        Intrigue: 0
+        Learning: 0
+        CombatStrenght: 0
+      Stats:
+        Diplomacy: 0
+        Martial: 0
+        Stewardship: 0
+        Intrigue: 0
+        Learning: 0
+        CombatStrenght: 0
+      Traits: []
+      Gender: 0
+      Relations: []
+    Type: 0
+    Strength: 50
+    History: 
+  references:
+    version: 2
+    RefIds: []

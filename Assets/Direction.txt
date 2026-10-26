@@ -1,0 +1,2055 @@
+================================================================================
+NOBLES & KNIGHTS - DESIGN DIRECTION
+Living document. Single source of truth for game direction.
+================================================================================
+
+PURPOSE
+-------
+This document describes what Nobles & Knights should be - its intent, systems,
+and reasoning. Code state lives in the code; this document captures design
+direction.
+
+STATUS VOCABULARY
+-----------------
+  [LIVE]    Implemented, and does what this document says.
+  [PARTIAL] Implemented, but incomplete against the intent described here.
+  [DESIGN]  Designed on paper. Not implemented.
+  [ABSENT]  Neither designed nor implemented.
+  [OPEN]    Actively undecided. Do not assume an answer.
+
+================================================================================
+1. VISION
+================================================================================
+
+Nobles & Knights is a slow, character-driven simulation of noble houses,
+politics and legacy.
+
+You do not play a country. You play a person inside a dynasty. Territory is a
+consequence of good characters, not the objective itself.
+
+The setting is high-medieval with a light fantasy overlay: multiple distinct
+cultures and multiple religions, so cultural and religious identity diverge
+rather than being cosmetic labels.
+
+The question the game asks, repeatedly: can this character hold onto power,
+and what will it cost them?
+
+Two commitments follow from this and shape every system below.
+
+  MANY VALID PLAYSTYLES. There is no single correct way to play. See
+  section 4.
+
+  A WORLD THE PLAYER SHAPES. Cultures, religions and their content are
+  authored by the player and generated to order, so the game can become any
+  setting. See 6.20 and 6.21.
+
+The first paragraph above is DRAFT - inferred from the existing implementation.
+The two commitments are designer-set.
+
+================================================================================
+2. DESIGN PILLARS
+================================================================================
+
+Every design decision is measured against these. If a proposal contradicts a
+pillar, the pillar wins or the pillar gets revised deliberately.
+
+PILLAR 1 - CHARACTERS ARE THE CONTENT
+  A specific ruler with specific stats, traits, relationships and opinions is
+  more interesting than a map with more detail. Systems serve character drama
+  first. If a system can be expressed as "a number on the map" instead of
+  "something a person wants or fears", prefer the person.
+
+PILLAR 2 - TIME IS THE CURRENCY
+  Nothing is instantaneous. Actions take days, council roles run for weeks,
+  opinions accrue over years. Progress feels earned because it is slow. Any
+  new system must declare what it costs in days and must be worth that wait.
+
+PILLAR 3 - PEOPLE, NOT NUMBERS, HOLD POWER
+  Authority flows through councils, families, marriages and opinion. The
+  player is frequently dependent on other people liking them. Systems that let
+  the player bypass other characters work against this pillar.
+
+PILLAR 4 - CONSEQUENCE OVER OPTIMISATION
+  Failure should hurt in interesting, legible, persistent ways. Not a
+  subtraction from a total. A system that can be played optimally without ever
+  taking a risk is not finished.
+
+PILLAR 5 - LEGIBILITY
+  The player can always understand why something happened. Hidden math,
+  invisible weighting and unexplained outcomes all violate this. If the
+  player cannot say "I did X and got Y", the system is not done.
+
+PILLAR 6 - MANY VALID PLAYSTYLES
+  The game has no single correct way to play. Materially different paths -
+  landless adventurer, landed knight, empire-builder - must each be viable
+  over a full campaign. Systems gate on REQUIREMENTS a character can meet,
+  never on PERMISSION a character does not have. A king may go and explore
+  caves. It will generally be a poor use of his time, and that is the correct
+  and sufficient penalty.
+
+PILLAR 7 - THE PLAYER SHAPES THE WORLD
+  Cultures, religions and their content are schemas, not scripts. The game
+  ships generic starting examples to give the world a face, and the player may
+  replace or extend them to make the world anything they want. Where content
+  is generated, it is generated the way terrain is: from parameters the player
+  controls.
+
+PILLARS 1-5 ARE DRAFT - inferred from the existing implementation, not yet
+reviewed by the designer. Pillars 6 and 7 are designer-set.
+
+================================================================================
+3. THE DESIGN MODEL
+================================================================================
+
+What the game simulates, conceptually:
+
+  PEOPLE        Characters with stats, traits, relationships, opinions,
+                ambitions, titles, family. They age, they die, they inherit.
+
+  PLACES        Locations with population, type, discovery state and
+                improvements. Some are held, some are only visited.
+
+  LAND          Terrain, provinces, regions, roads and rivers. Terrain decides
+                what can exist where, and shapes how land divides up.
+
+  STRUCTURE     Houses, cultures, religions, titles and vassalage. Who
+                belongs to whom, and what they believe.
+
+  TIME          A day clock. Everything is measured in days.
+
+  PRESSURE      Events, opinions and needs that create problems to solve.
+
+The intended emotional shape: you are managing a handful of overlapping
+commitments that resolve on different timescales, and you cannot be everywhere.
+
+================================================================================
+4. PLAYSTYLES AND UNIVERSALITY
+================================================================================
+
+INTENT
+  The game must not have a single correct way to play. At minimum these
+  archetypes must each be viable over a full campaign:
+
+    THE LANDLESS    No titles. Takes quests, explores ruins and caves, signs up
+                    with institutions. Converts time into renown, and renown
+                    into land.
+
+    THE KNIGHT      Landed, serving in a ruler's army. Fights wars for renown,
+                    land and dynasty. Martial and Combat Strength lead.
+
+    THE RULER       Holds a realm. Councils, politics, legitimacy, peace.
+                    Stewardship, Diplomacy and Learning lead.
+
+  These are not separate modes or separate games. They are one system set
+  approached from different starting positions.
+
+THE RULE: REQUIREMENTS, NOT PERMISSION
+  A legitimate gate states a property OF THE CHARACTER, or of their standing,
+  that they either have or can obtain. An illegitimate gate states a ROLE the
+  character occupies - "only rulers may do this", "only the player character
+  may do this".
+
+  Requirements are varied and there are many kinds. A gate may rest on:
+
+    SKILL         A minimum in a stat. Combat Strength to lead a company.
+    TRAIT         A quality of character. Brave, Greedy, Devout.
+    CULTURE       Membership of a cultural group.
+    RELIGION      Faith, or membership of a faith.
+    RACE          Lineage or species.
+    STANDING      Membership of an institution. A guild rank, a commission.
+    TITLE         A rank or claim, where the rank is genuinely part of the task.
+    RESOURCES     Wealth, equipment, a retinue, supplies.
+    WORLD STATE   The state of the world. A location discovered, a war ended,
+                  a season, a dynasty fallen.
+
+  Consequence: the ruler who wants to spend a month in a cave is allowed to, if
+  he meets the cave's requirements. The cost is opportunity, not refusal - he
+  forfeits a month of council deployments, income, defence and events.
+
+  This is why the day clock matters more than any lock. Pillar 2 and this
+  pillar are the same mechanism: time is the cost, so any use of time is
+  permitted, and the player judges whether it was worth it.
+
+REQUIREMENTS FALL INTO TWO KINDS, AND THE DIFFERENCE MATTERS
+
+  ATTAINABLE      The character can acquire it. Skills through growth, traits
+                  through events, wealth through service, standing through
+                  promotion, faith through conversion.
+
+  IMMANENT        The character cannot acquire it. Race. Ancestry. Birth. A
+                  closed guild. A bloodline.
+
+  Both are legitimate requirements. Both gate actions honestly. But an
+  imminent requirement cannot be crossed by effort, only by circumstance.
+
+  THE DESIGN CONSEQUENCE: a world made mostly of attainable requirements is a
+  world where any character can eventually do anything, and Pillar 6 holds. A
+  world with many imminent requirements is a world where the set of things a
+  character can ever do is fixed at birth, which is closer to a permadeath
+  roguelite than a dynasty game.
+
+  Therefore:
+    - Attainable requirements should dominate where they can.
+    - Imminent requirements should be scarce, and should carry weight when they
+      do apply rather than forming a blanket of exclusion.
+    - An imminent requirement should usually come with a path to compensating
+      advantage elsewhere. A knight who cannot enter the scholars' guild should
+      have something the scholars cannot do.
+
+  This also settles the earlier claim about skill progression. Under attainable
+  requirements, skill growth is what converts a gate from a wall into a goal.
+  A closed door that opens as the character improves is a design feature; a
+  closed door that never opens is a wall the player will route around or resent.
+
+  A caution on identity requirements specifically. "Must be of this culture" and
+  "must worship this god" are legitimate requirements, but they are easy to
+  overuse as a substitute for design, and they carry a specific risk: if
+  identity gates are the main way content is restricted, then the game is
+  quietly telling the player their generated culture matters more than their
+  choices. Identity should gate some things in some places, not be the default
+  answer for why an action is unavailable.
+
+THE CROSS-PLAYSTYLE CURRENCY
+  Renown is intended to be the currency that makes all three paths
+  interconnect:
+
+    Adventurer   time -> renown
+    Knight       war -> renown -> land
+    Ruler        legitimacy -> renown -> stability
+
+  If renown cannot be earned by a character holding no titles, the landless
+  path is economically dead no matter how many quests exist.
+
+INSTITUTIONS BEYOND THE STATE
+  The adventurer path implies the game needs organisations that are not crowns.
+  Guilds, mercenary companies, orders and fellowships give a landless
+  character somewhere to belong, somewhere to take work from, and a ladder to
+  climb. Houses and councils serve the landed paths; a third kind of
+  institution serves the landless one.
+
+OPEN QUESTIONS
+  - What does a landless character call home, and how do they store wealth?
+  - Are institutions ranked internally the way titles are, with their own
+    seats, ranks and promotions?
+  - Can a character move between archetypes mid-campaign?
+
+================================================================================
+5. HOW MUCH OF THE WORLD SIMULATES
+================================================================================
+The world is not a backdrop. Real characters live out real lives whether or not
+the player is watching, because the alternative destroys the genre. If a world
+exists only where the player looks, then the player's own importance is the only
+thing being simulated.
+
+  THE TWO EXTRESES, AND WHY NEITHER WORKS
+
+    SIMULATE NOTHING OFF-SCREEN
+      Cheap, and it quietly turns the game into a management sim. Every
+      interesting person is one the player already found. The world becomes
+      static scenery that decorates the player's own story. It also makes
+      PERMANENT succession (6.6) hollow, because dying ends contact with a world
+      that was never really running.
+
+    SIMULATE EVERYTHING EQUALLY
+      Alive, but expensive and unfair. Thousands of characters each running
+      opinion, needs, actions and careers per tick will not scale. It also
+      produces a specific failure: the player becomes an administrator of a
+      spreadsheet, prioritising remote problems that will never matter.
+
+  THE RESOLUTION: SIMULATE BY IMPORTANCE, NOT BY PRESENCE
+    The distinction is between what is SIMULATED and what is RESOLVED.
+
+      Not every character needs full simulation. Simulation is expensive, and
+      most unlanded commoners lead simple lives with little that meaningfully
+      affects the playable drama. To keep the world alive without drowning the
+      player in administration, full simulation is reserved for characters of
+      consequence: landed rulers and their courts, members of the player's
+      dynasty and close kin, characters with active claims, rivals, or schemes
+      involving the player, and a deliberately limited set of important
+      characters (such as notable adventurers, guild leaders, or other figures
+      the story has marked as significant).
+
+      Unlanded commoners - the vast majority of the population - are not
+      simulated day-by-day. They may age, marry, and produce children in
+      aggregate over seasons or years, creating a plausible backdrop without
+      generating individual actions for every peasant. Aggregated pools are
+      purely statistical; notable individuals are not pre-generated - they are
+      spawned at runtime when they become relevant. When a specific commoner
+      becomes relevant (drawn into a quest, married into the court, becomes a
+      claimant, etc.), they are promoted to full simulation with a plausible
+      backstory generated at that moment, sized to fit their importance.
+
+      Children are fully simulated from birth (as noted in 6.5), but they have
+      very limited agency while young. A newborn or infant has little to do;
+      their days consist mainly of growth, health, and relationships. Age 12 is
+      the baseline threshold where children gain meaningful agency (full
+      simulation actions). This may later become culture- or setting-defined.
+      While under the agency threshold, children have limited scope: education,
+      study, play, visit, and reacting to certain events. Routine political or
+      military actions are not available. Education is their primary structured
+      activity with bidirectional influence - both guardian and child preferences
+      matter, gated by culture, standing, and guardianship. This preserves the
+      dynasty's continuity without creating busywork for children.
+
+      If a baby or minor inherits a title, a regency applies (see 6.6). The form
+      and strictness of regency varies by culture, religion, and style of
+      rulership - it is not universal. The heir remains simulated throughout
+      their minority, but command rests with the regency council.
+
+    Relevance determines whether a non-commoner is fully simulated. A character
+    in a distant province the player has never visited may still be fully
+    simulated because they are the player's mother, or married to the player's
+    character, or the heir. Conversely, an unlanded stranger has no individual
+    simulation regardless of proximity. The player's own attention and the
+    character's importance to the story define the fidelity boundary, not the
+    map alone.
+
+  WHAT MUST NEVER BE AGGREGATED
+    Four categories, or the illusion breaks:
+
+      DYNASTY     The player's own bloodline, always. Children are fully
+                  simulated from birth. They have very limited agency until
+                  around age 12 (starting baseline; may be culture/setting-defined
+                  later), mainly growing, staying healthy, building relationships,
+                  and reacting to occasional events. Education is their structured
+                  activity, with player influence varying by context. If the
+                  player's heir grows, ages and dies on an abstracted clock,
+                  succession is a cutscene rather than a fact.
+
+      KIN AND CLOSE TIES
+                  Anyone the player's opinion of matters to, and close family.
+                  If a friend or close relation dies off-screen and the player
+                  is told a decade later, that is a lie about a relationship.
+
+      RIVALRY      Anyone with an active grudge, claim or scheme against the
+                  player. Threats are the player's business.
+
+      LANDED AND IMPORTANT
+                  Landed characters, their courts, and any character marked as
+                  important to the story (adventurers, guild leaders, notable
+                  figures) must remain at sufficient fidelity to preserve
+                  consequence.
+
+  OPEN QUESTIONS
+  - Budget ceiling: target the maximum number of fully simulated characters
+    possible within performance constraints. Determine the exact ceiling through
+    playtesting; it is not fixed in this document.
+  - Aggregation granularity: implement settlement-level aggregation as the
+    primary baseline for unlanded commoners. The system may adjust granularity
+    if needed, but start at settlement level.
+  - Promotion/demotion: demotion is not the default behavior and should be
+    avoided. Characters are promoted when relevance demands it; if budget
+    pressure arises, demotion is considered only as a last resort. Important
+    figures (e.g. revolution leaders) may be spawned at key moments, persist
+    through their arc, and may be retired/deleted at arc end - with possibility
+    to save them for potential return. Exact thresholds are to be discovered
+    through testing.
+  - Adventurer cap: no fixed cap. Adventurers are an example of characters that
+    cannot be aggregated and emerge naturally through story and events, not via
+    competition for fixed slots. Discover practical limits through testing.
+  - What marks someone as "important": in addition to landed, dynasty/close kin,
+    rivals/claims, and schemes involving the player, the list may include
+    guild/order leaders, renowned figures meeting a renown threshold,
+    event-generated figures, patrons, and other story-driven characters. The
+    "important figures" set will grow organically; caps/quotas are not fixed.
+    Maximize simulation while staying within budget, trimming only when necessary
+    based on testing.
+  - How does relevance decay? Relevance does not decay automatically with time.
+    It changes only through events, relationships, and story state (e.g. rivalries
+    resolved, quests completed, claims extinguished). Demotion is rare; retention
+    is preferred. Only when facing simulation pressure will demotion be considered.
+    Arc-based figures may be retired/deleted at arc end with option to save for
+    potential return. This preserves meaningful connections.
+  - Should the player be able to see simulation edges? This needs clarification on
+    consequences and UI - expose subtle indicators only if it doesn't break
+    immersion, and respect the chosen reveal mode (see 6.25). Consider an
+    optional setting.
+
+LOOP
+  Generate world -> acquire and hold territory -> characters age and change ->
+  councils and events apply pressure -> you spend time to hold it together ->
+  succession -> repeat with a new character
+
+PACING MODEL  [LIVE]
+  The clock is the game's fundamental constraint. New systems must fit it.
+
+    1 in-game day per real second at normal speed
+    Fast-forward is 3x
+    Payday every 15 days
+    Year passes every 360 days
+    One year is roughly six real minutes
+
+  Scale guidance for new systems:
+
+    Actions / interactions ....... hours to a few days
+    Council deployments .......... roughly 2-4 weeks
+    Schemes and intrigue ......... weeks
+    Wars .......................... months
+    Reforms, schisms .............. years
+
+  A system that resolves faster than a day has not been given a real cost. A
+  system that resolves slower than a year will feel disconnected.
+
+================================================================================
+6. SYSTEMS
+================================================================================
+
+--------------------------------------------------------------------------------
+6.1 CHARACTERS                                          [PARTIAL]
+--------------------------------------------------------------------------------
+A character has identity (name, age, gender, portrait), resources (wealth,
+renown, piety), six skills (Diplomacy, Martial, Stewardship, Intrigue,
+Learning, Combat Strength), traits, relationships, held titles, an optional
+council seat, and family links.
+
+INTENT
+  Characters are the thing the player actually inhabits and cares about. They
+  need to be individually legible and individually different.
+
+WHAT IS MISSING
+  - Characters do not improve. Skill experience is awarded by actions but
+    nothing converts it into growth. A character is fixed at creation except
+    through traits and age. This directly undermines Pillar 1: there is no arc.
+  - No ambition, wants or personality beyond traits.
+  - Ageing is tick-based; mortality and inheritance are undesigned.
+
+--------------------------------------------------------------------------------
+6.2 SKILL PROGRESSION                                   [ABSENT]
+--------------------------------------------------------------------------------
+INTENT
+  Skills must grow, slowly and conditionally, so a character has a trajectory
+  and the player has something to invest in. Growth should be gated by
+  circumstance (age, events, teaching, hardship), not just by spending a pool.
+
+WHY THIS IS THE HIGHEST-PRIORITY ABSENT SYSTEM
+  Systems gate on requirements rather than permission (section 4), and a skill
+  threshold is the archetypal legitimate gate. But a gate on a stat that never
+  changes is just a character-creation label.
+
+  So skill growth is not a nice-to-have progression system. It is what makes
+  requirement-gating mean anything, and therefore what makes Pillar 6 real.
+  A knight who trains becomes able to do things a squire could not.
+
+NO SPENDABLE POOL
+  Growth is diegetic. There is no experience currency and no stat screen where
+  the player allocates points. This is the correct choice for the game, and the
+  reason matters: a spendable pool turns character development into a menu,
+  which would put the player in the role of an administrator rather than a
+  person making consequential choices with limited time.
+
+  The player's lever is therefore WHICH experiences they pursue, not how many
+  points they assign. A character sent to be a tutor grows Learning and
+  Diplomacy. The same character sent to a levy grows Martial and Combat
+  Strength. Both cost days, and days are the real currency (Pillar 2).
+
+SOURCES OF GROWTH
+  Four sources, all diegetic. Each should be legible to the player as an
+  explanation for why a character is the way they are.
+
+    INHERITANCE   Base stats derive partly from parents. This makes bloodline
+                  meaningful and makes the dynasty a genuine asset: a house
+                  that breeds for scholarship produces scholars for free, and
+                  one that breeds for martial skill produces soldiers. It also
+                  means a bad bloodline is a long-term problem, which is part
+                  of what makes inheritance tense.
+
+    TUTORS       Education during childhood and youth. Availability depends on
+                  wealth, standing and culture, so a poor character may simply
+                  not be taught. This is a primary way the world reproduces its
+                  own hierarchy, and a legitimate target for the player to
+                  break by finding a patron willing to sponsor an education.
+
+    LIFE EVENTS   Specific things that happened. A siege, a betrayal, a
+                  long illness, a year spent on campaign. These should be
+                  individual and memorable, not generic per-day accrual. A
+                  character who survived a siege should be recognisably
+                  different from one who did not.
+
+    TRAITS        Traits modulate and sometimes grant skills outright. Already
+                  partially implemented - see 6.4.
+
+WHAT THIS IMPLIES FOR REQUIREMENT GATES
+  Because growth is slow, event-driven and partly inherited, a skill gate is a
+  long-term goal rather than a menu choice. Two consequences to design for:
+
+    - A gate must not require a stat so high that a normal character cannot
+      reach it within a plausible lifetime. The gate should mark the edge of
+      competence, not the edge of the possible.
+    - Because inheritance feeds growth, requirements can become effectively
+      hereditary. A house that cannot pass a Martial gate may never pass it.
+      That is thematically right for a dynasty game, but it must be visible to
+      the player early enough to plan around, or it reads as an unexplained
+      wall.
+
+LEGIBILITY OF GROWTH
+  Growth is diegetic, so the player must be able to read it as narrative rather
+  than as arithmetic. Each of the four sources should be visible as an
+  explanation: this character was taught by a tutor, that one survived a siege,
+  this one's father fought in three wars. Pillar 5 applies directly - if the
+  player cannot say why a character is the way they are, the system is not done.
+
+  Legibility carries exactly two obligations, and neither of them is prediction.
+
+    EXPLAIN THE PAST    Every point of growth a character has is attributable to
+                        a named source. The player can always answer "why is he a
+                        9 in Martial" with "three campaigns and a siege".
+
+    SHOW THE PRESENT GAP
+                        For any requirement the character currently fails, the
+                        shortfall is visible and named. This is the same
+                        obligation as in 6.19 - show the shortfall, and let the
+                        player see routes they do not yet qualify for. A closed
+                        door with no stated distance is indistinguishable from a
+                        wall.
+
+  Projecting a future ceiling is explicitly not one of these obligations.
+  Showing what a character could still become is a planning aid, and it is a
+  secondary concern rather than a core one. It is also in tension with the four
+  sources above: because growth is partly inherited and partly event-driven, a
+  projected ceiling is a guess wearing the clothes of a fact. A number the
+  player built a plan around, which then turns out to be wrong, is worse than no
+  number at all.
+
+OPEN QUESTIONS
+  - Is there a hard cap by age, and do physical skills decay in old age?
+  - Does a character choose who tutors them, or is it decided by their
+    guardians?
+  - How much of a parent's stats is inherited, and is it modified by the
+    parent's own traits?
+  - Can a character exceed the skill ceiling of both parents through
+    circumstance alone?
+
+--------------------------------------------------------------------------------
+6.3 OPINION AND RELATIONSHIPS                            [LIVE]
+--------------------------------------------------------------------------------
+Opinion between two characters is a layered score, clamped to a fixed range,
+built from: family bonds, political ties, shared identity (house, religion,
+culture), trait agreement and opposition, diplomacy and renown differences,
+and timed modifiers.
+
+Timed opinion modifiers carry a duration in years and decay annually, so
+favours and grudges fade over a lifetime.
+
+INTENT
+  This is the signature system and the engine of Pillar 3. Relationships should
+  be the primary source of both opportunity and obstruction.
+
+WHAT IS MISSING
+  - Opinion is calculated but not directly playable. There is no player-facing
+    lever on someone else's opinion of you.
+  - Relationships are a fixed type list. There is no way to create, change or
+    destroy a relationship through play.
+
+--------------------------------------------------------------------------------
+6.4 TRAITS                                               [PARTIAL]
+--------------------------------------------------------------------------------
+Traits are data assets carrying stat modifiers, an opinion value, and an
+optional opposing trait reference. New characters are assigned a small number
+of unique traits.
+
+INTENT
+  Traits are how characters differ from one another at a glance, and how the
+  opinion system finds friction between people who would otherwise be
+  compatible.
+
+WHAT IS MISSING
+  - Content volume is very low. Only a handful of traits exist.
+  - No trait acquisition, removal, or conflict between opposing traits on the
+    same character.
+  - No interaction with events.
+
+--------------------------------------------------------------------------------
+6.5 MARRIAGE, FAMILY AND DYNASTY                         [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  A dynasty game needs a way for dynasties to be MADE, not only to end. This is
+  the section that creates houses, alliances, claims and heirs - the raw material
+  every other system in section 6 consumes. Succession (6.6) describes what
+  happens to an estate; this describes where an estate comes from.
+
+  It is also the purest expression of Pillar 3. Nobody marries themselves into
+  power. Every claim the player will ever hold began as two families deciding
+  they needed each other, and the player is almost always outnumbered by the
+  people whose agreement they need.
+
+  Cultivating loyal branches should be rewarded, but not exploitable. Loyalty is
+  contextual: kinship gives a foundation, but it must be earned and maintained
+  over time through treatment, favors, titles, and shared history. It can erode
+  if neglected or if interests diverge. This prevents a single 'favorite' from
+  becoming an automatic yes-man dynasty.
+
+MARRIAGE LAW IS A PROPERTY OF CULTURE AND FAITH
+  There is no universal marriage rule in this game. Who may marry whom, how many
+  spouses a character may hold, whether kin may marry, whether a spouse may hold
+  office, and what it takes to dissolve a match - all of it belongs to the
+  culture and faith involved, read through the capability-flag discipline in 6.21.
+
+  The reason is the same reason 6.21 exists at all. A game that promises to be
+  whatever the player wants cannot decide that marriage is monogamous and
+  Christian in a world the player has generated as polytheistic and martial. If
+  the mechanic needs to know whether a faith permits a cleric to marry, then
+  CLERGY_CAN_MARRY is a property the faith has or does not have - not a constant
+  in the marriage code.
+
+  The consequence is that marriage becomes one of the most visible places where
+  a generated world feels genuinely unlike a stock one. A culture that permits
+  sibling marriage produces a different political graph from one that forbids it,
+  because claims concentrate differently. A faith whose clergy may not marry
+  produces religious characters whose marriages are dynastic arrangements rather
+  than love matches, and that is a different game to play.
+
+  Inbreeding is the other side of dynastic concentration. Marrying too closely
+  carries compounding costs (health, fertility, negative traits). At the same time,
+  stacking the same strong traits produces diminishing returns over generations
+  (genetic drift), and good outside marriages come with political pressure and
+  cost. This combination prevents exploitable 'super-soldier inbred' dynasties
+  while still rewarding deliberate consolidation.
+
+  These are IDENTITY gates in the section 4 sense, and the caution there applies
+  with force: they should gate some things in some places, and be legible as
+  culture rather than presented as arbitrary restriction. The player must be able
+  to say "this is not permitted in our faith" and be right.
+
+BOTH PARTIES MAY APPROACH
+  Suits may be made by the player or received by the player. A character courts,
+  proposes, negotiates and refuses; and equally, a character is courted,
+  proposed to, and propositioned by someone they may not want.
+
+  An unwanted suit is not a free accept. Being pursued is a social event with a
+  cost either way - refusing a powerful house costs standing, and accepting a
+  suit you do not want costs the days and the consequences of a marriage you did
+  not choose. This is a direct application of section 4's rule that the cost of a
+  choice is time and opportunity, never refusal: the game should let the player
+  walk into a bad marriage and then live with it.
+
+RELEVANCE BRINGS THEM TOGETHER
+  Matches are proposed between characters who have a reason to meet, and the
+  reason is relevance rather than proximity. The same principle governs diplomacy
+  in 6.15 and the resolution tiers in section 5. A character is a plausible
+  partner if there is a reason for the two houses to want an alliance - a
+  border, a war, a claim, a debt, a shared enemy, or simply standing that would
+  be gained by pooling it.
+
+  Distance should matter, but as cost rather than as exclusion. A match between
+  houses on opposite sides of the map takes months to arrange, which is a real
+  price and never a refusal.
+
+MARRIAGE IS AN OPINION TRANSACTION
+  A marriage is the clearest conversion of opinion into power the game has. Two
+  houses that dislike each other become, through a marriage, an alliance with
+  shared interests - and two houses that already trust each other can extract far
+  more from the same arrangement than two who do not.
+
+  So the opinion of the relevant characters should be visible before, during and
+  after a match is negotiated, and the player should be able to say why a
+  marriage was possible and what it was worth. Pillar 5 applies with no
+  exceptions here: if the player cannot explain why the match happened, the
+  marriage system is not finished, however good the outcome was.
+
+CHILDREN ARE SIMULATED FROM BIRTH
+  Every child is a full character from the moment of birth: named, with traits,
+  skills, opinions, a place in the family graph, and a mortality clock. They are
+  never aggregated.
+
+  This follows directly from section 5's rule that DYNASTY is never aggregated.
+  The player's own bloodline is the one thing the simulation must never abstract,
+  because if a child grows and dies on a coarse clock, succession stops being a
+  fact and becomes a cutscene. A dynasty game whose heirs are statistics is a
+  management game.
+
+  Children of characters the player has never met may be aggregated in the
+  ordinary way, and usually should be - a full character for every child in the
+  world is exactly the budget problem section 5 leaves open.
+
+WHAT A PARENT CONTROLS
+  A parent can influence how a child grows, and the mechanisms available are
+  themselves cultural and religious. Guardians decide a child's early rearing; a
+  tutor decides what they are taught; a household's culture decides what is
+  considered worth teaching at all.
+
+  The deliberate answer is that all of these exist, and which are available
+  depends on the setting - a culture that invests in scholarly tutors offers a
+  different lever than one that puts children in the field at twelve. This is
+  6.2's INHERITANCE and TUTORS sources arriving through 6.21's capability flags,
+  and it is what lets a dynasty deliberately breed for a capability across
+  generations rather than merely hoping for it.
+
+CHILD MORTALITY IS THE POINT
+  Children die. That single fact is what makes succession planning an act of
+  anxiety rather than an act of arithmetic, and it is the strongest reason for a
+  player to care about opinion, physicians, faith, and the regard of a spouse.
+
+  It also does useful structural work. A large family is insurance, so producing
+  heirs is a legitimate strategy rather than a numbers exercise - and because
+  claims persist to the house (6.6), a house with many surviving children is a
+  house with many ways to lose a succession contest.
+
+  Longevity and child survival remain uncertain. Natural mortality forms a
+  baseline; illness, wounds, and chance events can claim lives at any age. Care
+  (physicians, faith-based care, environment) can improve odds, but never
+  guarantees survival.
+
+  This interacts with 6.24, and it should: the lethality of childhood illness is a
+  setting property, so a generated world can be a place where dynasties are short
+  and brutal or long and stable, and the player should be able to feel which.
+
+WHAT IS MISSING
+  - No marriage, family or dynastic relationship of any kind exists in code.
+  - No children as characters. See 6.1, where ageing is tick-based and mortality
+    and inheritance are undesigned.
+  - None of the capability flags this depends on exist yet. See 6.21.
+
+OPEN QUESTIONS
+  - How are marriageable candidates surfaced? By rank, by relevance, by culture,
+    or as a court that presents a shortlist?
+  - Can a marriage be annulled or dissolved, and who may petition for it?
+  - How many children does a character have, and is that a fixed roll or a
+    function of age, health and the world?
+  - Are the children of a disputed succession themselves contested? See 6.6.
+
+--------------------------------------------------------------------------------
+6.6 SUCCESSION AND INHERITANCE                           [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  Essential for a dynasty game. Succession is where characters, titles,
+  debts, enemies and traits transfer between people. It should be the moment
+  the player most dreads and most plans for.
+
+SUCCESSION IS A WORLD-GENERATION CHOICE
+  The player chooses a succession rule before the campaign begins, from a menu
+  of modes. This is a setting, not a mechanic the player configures mid-run, so
+  it belongs alongside the other generation parameters in 6.20 - chosen once,
+  before the world exists, and governing the whole game.
+
+  SCOPE: one mode first, then the others
+    The first implementation is ANY CHARACTER: on death, play continues as any
+    living character of the player's choosing. This is the loosest bond and the
+    simplest to build, and it is a sufficient game on its own - it never forces
+    the player into a bloodline they did not choose.
+
+    The remaining modes are added afterwards as settings over the same underlying
+    succession machinery. They should not require reworking character death,
+    because the same system serves all of them: find living characters, present
+    them, apply the chosen rule to pick one, transfer the estate.
+
+    Designing the simple mode first is also the safer order. It exercises death,
+    estate transfer and character selection with no extra rules on top, so any
+    problems found there do not have to be untangled from five interacting modes.
+
+  The modes, in increasing distance from the bloodline:
+
+    ANY CHARACTER   Play continues as any living character, chosen by the
+                    player. The loosest bond - you are a participant in a
+                    world rather than the head of a house. Built first.
+
+    CIRCLE          Play continues as a chosen friend, spouse, rival or
+                    courtier rather than an heir. Succession becomes lateral:
+                    you move through the social graph instead of down a family
+                    tree.
+
+    BLOODLINE       Play continues as the heir, chosen automatically by
+                    succession rules. The dynasty experience: you are the
+                    family, and the family outlives you.
+
+    SELECT AN HEIR  On death the player chooses which heir to continue as. Adds
+                    a real strategic decision each generation - the succession
+                    crisis becomes a decision point rather than a cutscene.
+
+    PERMANENT       The run ends when the player character dies. Highest
+                    stakes. Every campaign is one life, so the game is a
+                    sequence of short, intense lives rather than a dynasty.
+
+    CIRCLE deserves a note. It means who you die next to matters more than who you
+  are related to, which inverts the usual dynasty framing and leans entirely on
+  relationships being legible. If relationships are opaque, this mode is
+  unplayable.
+
+  Selecting a mode should not exclude others from the simulation. Even under
+  PERMANENT, the dynasty continues without the player - heirs rule, marry,
+  age and die on their own. The world does not pause for the player's death.
+  This is what makes permanent death meaningful rather than merely punishing.
+
+WHAT PASSES TO AN HEIR
+  Six categories, each with a settled position. The organising principle is that
+  an heir inherits POSITIONS AND CLAIMS, but never the personal experience that
+  made their parent's life legible.
+
+    TITLES       Transfer, subject to the succession rule in force. A title held
+                 by the deceased passes under that rule, and where the rule is
+                 contested the contest is the interesting part - see the claims
+                 note below.
+
+    WEALTH       Transfers, but as an ESTATE rather than as cash. The heir
+                 inherits obligations, income-earning holdings and standing,
+                 not a balance. This keeps 6.11's "no expenses" problem from
+                 being inherited as a problem: a sum of money with no cost
+                 attached to it is not wealth, it is a number.
+
+    RENOWN       Does NOT transfer as personal renown. It settles into HOUSE
+                 STANDING instead, which acts as a floor beneath the heir's own
+                 renown and colours how others initially treat them, but which
+                 the heir cannot spend as their own reputation.
+
+                 The reasoning matters, because section 4 makes renown the
+                 cross-playstyle currency and 6.19 makes it the resource that
+                 buys land. A dynasty must be able to accumulate standing across
+                 generations or the long game has no long arc. But if renown
+                 transferred intact, the dynasty game degenerates into a
+                 reputation stack that one fortunate ancestor maxes out, and
+                 every subsequent generation plays no part in it. Splitting it -
+                 standing persists, personal renown must be re-earned - is what
+                 makes inheritance a head start rather than a finished
+                 character.
+
+    PIETY        Does not transfer as the heir's own piety. It converts into an
+                 OBLIGATION attached to the standing that came with the
+                 titles - a debt owed to a faith or an institution, with terms.
+                 This makes religion a route to power (6.19) rather than a
+                 score, and it gives a hostile creditor something to hold over
+                 a new ruler.
+
+    CLAIMS       Persist to the HOUSE, not to the individual. A claim is a
+                 statement about the dynasty's relationship to a title, so it
+                 outlives the character who can press it. This is why a dynasty
+                 can lose a war it was not alive to start, and why rivals must
+                 be permanently eliminated rather than merely defeated once.
+
+    RELATIONSHIPS Do not transfer, in any form, and this is the strictest rule
+                 in the section. An heir who inherits their parent's friends is
+                 the fastest available way to make 6.3 meaningless, because
+                 opinion would become a property of the estate rather than
+                 something between two people. Every relationship the heir has
+                 on the day of succession is one they built or must earn.
+
+  The consequence worth stating plainly: succession transfers leverage, not
+  friendship. A new character begins with titles, wealth, standing, claims and
+  debts, and begins with an empty relationship graph and no reputation they did
+  not earn. That is a deliberately uncomfortable position, and it is the
+  position the rest of the document is built to make playable.
+
+MINORITY AND REGENCY
+  A character who inherits before adulthood is ruled by a REGENCY COUNCIL until
+  they come of age. The heir is playable throughout - they age, they learn, they
+  have opinions and relationships - but they do not command. Council seats,
+  deployments and war are held by the regency, not by them.
+
+   If no regent is explicitly designated by the predecessor, the default regent
+   is determined by culture and religion (data-driven). Regency is contestable -
+   eligibility to contest is determined by culture and religion. The definition
+   and strictness of regency vary by culture and religion and should be encoded
+   as minimal data flags (covering key powers/restrictions). The age of majority
+   is culture-defined.
+
+  This is the direct expression of Pillar 3 and of the requirement rule in
+  section 4. The minority is not a cutscene before the real game; it is a
+  situation with the same shape as every other situation in the game, in which a
+  young character's ability to act depends entirely on how other people regard
+  them. A regent who likes the heir governs differently from a regent who fears
+  them, and neither is chosen by the heir.
+
+  It follows that a long minority under a hostile regency is one of the
+  strongest tension sources available in this game, and that the design should
+  protect it rather than smooth it away. Nothing about it should resolve
+  quietly while the heir is off-screen.
+
+OPEN QUESTIONS
+  - Is succession resolved by character stats and opinion, or by fixed rules?
+    A hybrid is likely: claims by right, contested by strength and standing.
+  - How do multiple claimants and claimants' wars work? Note that this is now
+    load-bearing rather than incidental - claims persist to the house, so a
+    defeated claimant is not a solved problem.
+  - Under CIRCLE, what happens when the character you have been playing dies
+    and no one you like is alive?
+
+WHAT IS MISSING
+  - All of it. No death, no estate transfer, no regency, no claims exist in
+    code. What is described above is a specification, not an implementation.
+    See 6.22 for what the absence of a failure state currently means in play.
+
+--------------------------------------------------------------------------------
+6.7 COUNCILS                                            [LIVE]
+--------------------------------------------------------------------------------
+A ruler has a council with a number of seats equal to their title rank. Five
+roles exist, each bound to a skill: spymaster, diplomat, court priest,
+marshall, steward. Each role offers a timed deployment action that sends the
+councilor into the world with a map indicator. Vacant seats are visible, and
+candidates are searched from court, family and realm.
+
+INTENT
+  Councils are the player's main engine of ongoing effect, and the clearest
+  expression of Pillar 3 - power is exercised through other people.
+
+WHAT IS MISSING
+  - Every role has exactly one action, and it is generic. There is no
+    development, no specialisation, no council tension.
+  - Councilors have no opinion relationship with each other or with the ruler,
+    so council composition has no social consequence.
+  - No councilor death, loyalty, or ambition.
+
+--------------------------------------------------------------------------------
+6.8 LOCATIONS AND DISCOVERY                             [LIVE]
+--------------------------------------------------------------------------------
+Locations are either settlements (castle, city, church) that are holdable and
+pay tax, or zones and points of interest (ruin, cave, oasis, village, temple,
+mine, camp, lake) that are action sites. Each has a discovery state of
+unvisited, visited, explored, which gates available actions. Location types are
+distributed by terrain. Holdings support levelled improvements.
+
+INTENT
+  The surface of a place and its secrets are different content. This is the
+  exploration pillar: knowing a place is not the same as understanding it.
+
+WHAT IS MISSING
+  - Discovery state advances only through repeated action, with no narrative.
+  - Locations have no personality, no ruler, no politics. A city is a number.
+
+--------------------------------------------------------------------------------
+6.9 ACTIONS                                             [LIVE]
+--------------------------------------------------------------------------------
+Actions are the core verb. An action declares valid location types, whether it
+requires ruling, whether it repeats, which discovery states expose it, a time
+cost, resource costs, skill requirements, trait and title requirements, rewards,
+and risk. The framework validates, queues and resolves them.
+
+INTENT
+  Actions are where the game's systems meet the player directly. They should be
+  the main way character traits and skills express themselves.
+
+NOTE ON THE "REQUIRES RULING" FLAG
+  Actions currently declare a boolean "requires ruler". Under section 4 this is a
+  permission gate, not a requirement, and it is the clearest existing
+  contradiction of Pillar 6. A king exploring a cave is not a case the framework
+  can currently express.
+
+  It should be replaced by requirement declarations the character satisfies or
+  does not. The set of requirement kinds is given in section 4 and must not be
+  reduced to skills: skill, trait, culture, religion, race, standing, title,
+  resources, and world state are all legitimate. A ruler who meets a cave's
+  requirements should be able to go, and simply lose a month.
+
+  The flag is not merely to be removed. It marks where the whole action
+  vocabulary needs requirements rather than permissions.
+
+  Note that requirements need not be character properties at all. "The location
+  must be Explored", "it must not be winter", "this dynasty must no longer
+  exist" are all legitimate gates, and several are more interesting than any
+  stat threshold. World-state requirements are currently underrepresented in the
+  action framework, which treats requirements almost entirely as character
+  properties.
+
+WHAT IS MISSING
+  - Actions are uniform. They resolve the same way regardless of who performs
+    them or where.
+  - Reward and risk are flat, with no narrative outcomes.
+  - Actions are permanent per-location in effect; there is little persistent
+    world change from performing one.
+  - There is no action available to a character with no titles at all, which is
+    why the landless path has nothing to do. See 6.19.
+  - Requirements are modelled almost entirely as character properties. Culture,
+    religion, race and world state should gate some actions; today they gate
+    none. Identity gates are legitimate per section 4, but must not become the
+    default excuse for why an action is unavailable.
+
+--------------------------------------------------------------------------------
+6.10 RACE AND LINEAGE                                   [ABSENT]
+--------------------------------------------------------------------------------
+A gate may rest on race. The codebase has no concept of one, so this is new
+content rather than an extension of an existing system.
+
+INTENT
+  Race should exist as a data property that requirements and events can read,
+  not as a hardcoded assumption about the setting. A game that must support
+  "whatever setting the player wants" cannot assume a human default.
+
+WHY IT IS A REQUIREMENT AND NOT AN OPTIONAL EXTRA
+  Race is the archetypal IMMANENT requirement (section 4) - it cannot be
+  acquired by effort. That makes it a genuine design constraint rather than a
+  flavour tag, and it has to be handled deliberately:
+    - Its rarity as a gate. If race gates too much, capability is fixed at
+      birth and Pillar 6 fails.
+    - Its compensating advantages. What can a character of a given race do that
+      others cannot? Without this, race is purely exclusionary.
+    - Its interaction with generated cultures. Is race a property of culture, of
+      world generation, or independent of both? See 6.20.
+
+  Race is also the clearest test of the data-agnostic requirement in 6.21. If any system assumes a default
+  human baseline, the any-setting promise is already broken.
+
+OPEN QUESTIONS
+  - Is race fixed at character generation, or can it change? A curse, a
+    transformation, a cross-cultural marriage?
+  - Is race a property of the individual, the house, or the culture?
+  - Does a generated culture determine its races, or are races generated
+    independently and then distributed among cultures?
+  - At what realism setting does race stop being generated at all?
+  - Can a character of an unusual race hold any title, or are titles gated by
+    race? Note this is where 6.19's landless path could be quietly closed.
+
+--------------------------------------------------------------------------------
+6.11 ECONOMY                                             [PARTIAL]
+--------------------------------------------------------------------------------
+Payday-driven. Property income is the sum of tax across held locations, scaled
+by Stewardship. Renown accrues from Stewardship plus a bonus per title held.
+Piety accrues from Learning. Levy is capped by military strength and
+regenerates daily.
+
+INTENT
+  Wealth is a means, not a score. It should enable action and be a source of
+  vulnerability, not something to maximise.
+
+NOTE ON RENOWN AS THE BLOCKING ECONOMIC PROBLEM
+  Renown currently accrues from Stewardship plus a bonus per TITLE HELD. A
+  character with no titles therefore earns almost no renown, and cannot convert
+  time into political capital.
+
+  This makes the landless path economically dead. Renown must be
+  earnable without land - from service, contracts, combat, exploration and
+  deeds. It is the currency that lets the adventurer, the knight and the ruler
+  reach the same social tier by different routes.
+
+  Until this is resolved, adding guilds and quests gives a landless character
+  things to do but no way to become anything.
+
+WHAT IS MISSING
+  - No expenses. Wealth only goes up, so there is no economic pressure.
+  - No trade, no supply, no scarcity.
+  - No financial events.
+  - Renown has no non-landed sources. See the note above and 6.19.
+  - No landless income of any kind: no wages, no service pay, no contract
+    rewards.
+
+--------------------------------------------------------------------------------
+6.12 RANDOM EVENTS                                      [PARTIAL]
+--------------------------------------------------------------------------------
+Events roll daily against a mean-time-to-happen, are scoped to a holding,
+location or travel, have a global cooldown, and present as a popup with multiple
+choices. Some events are modified by character state. Seven preset events exist.
+
+INTENT
+  Events are the game's pressure system and its narrative delivery. They are
+  how the world acts on the player when the player is not acting.
+
+WHAT IS MISSING
+  - Event AI does not choose. Characters always pick the first option.
+  - Content volume is low.
+  - No event chains, no follow-ups, no scheduled consequences.
+  - Events do not interact with traits, cultures or religions.
+
+--------------------------------------------------------------------------------
+6.13 TRAVEL                                             [PARTIAL]
+--------------------------------------------------------------------------------
+Characters travel physically. Routes prefer roads, fall back to A* across the
+cell graph, and impassable terrain blocks movement. Pawns walk the map. ETA is
+shown. Multiple pawns can travel as a formation.
+
+INTENT
+  Distance is a real cost. Travel is what stops the map from being a menu.
+
+WHAT IS MISSING
+  - Travel has no content attached to it beyond arrival. What happens on the
+    road is only event-driven.
+  - No interception, no meeting others in transit, no scouting.
+
+--------------------------------------------------------------------------------
+6.14 CULTURE, RELIGION, HOUSES                           [PARTIAL]
+--------------------------------------------------------------------------------
+Houses are dynasties with a name, colour and members. Cultures and religions
+carry compatibility and relation scoring that feeds opinion. Both carry
+structures for heresy, schism, reform and holy war. A terrain affinity matrix
+exists defining which cultures and religions are drawn to which terrain.
+
+INTENT
+  Identity must be something that changes behaviour and opinion, not a label.
+  Culture and religion should make some things easy that are otherwise hard,
+  and forbid others.
+
+THIS IS THE SEED OF SOMETHING MUCH LARGER
+  A culture with a naming convention, values, martial tradition and compatibility
+  model is a general-purpose identity object. It would then also serve houses,
+  institutions and generated content, which is how Pillar 7 becomes true without
+  special-casing anything.
+
+  The work is specified in 6.20 (generation, including the realism slider) and
+  6.21 (player authoring and any-setting support). This entry is the current
+  partial state of what those sections describe.
+
+WHAT IS MISSING
+  - Culture and religion are nearly inert. Compatibility only feeds opinion.
+  - Culture does not gate or modify actions.
+  - Generated names are not culture-flavoured, so identity is invisible in the
+    fiction.
+  - Terrain affinity is not driving generation.
+  - Heresy, schism, reform and holy war are stubs.
+  - No schema. A culture and a religion are each a name plus opinion buffers,
+    so there is nothing for a player to edit or a generator to fill in. This is
+    the root limitation - See 6.21.
+
+--------------------------------------------------------------------------------
+6.15 DIPLOMACY                                           [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  Diplomacy is how characters who are not in the same room nonetheless come to
+  terms, and it is a system every character has, not a privilege the player
+  holds. Realms are not the actors - CHARACTERS are, including rulers, and their
+  dealings happen whether or not the player is watching.
+
+EVERY CHARACTER DIPLOMATES, AT DIFFERENT RESOLUTION
+  The load-bearing decision here is that diplomacy is not a player-only system
+  with an AI decoration. Every character in the world can open negotiations with
+  every other character they have a reason to deal with, and the player's
+  diplomatic options are simply their character's, exercised at full resolution.
+
+  The difference is fidelity, not capability, and it follows section 5 exactly. An
+  AI pair of characters negotiates in coarse steps at whatever resolution their
+  relevance justifies - a season at a time, reaching a statistically reasonable
+  outcome. The same negotiation between two characters the player is involved in,
+  or kin to, resolves day by day with every option visible.
+
+  The consequence is worth stating plainly, because it is unusual: there is no
+  separate diplomacy AI to write. There is one negotiation system, and relevance
+  decides how often it runs and how much of it the player sees. A player who
+  watches closely does not get a different game - they get a better-resolution
+  version of the same game everyone else is playing.
+
+RELEVANCE BRINGS TWO CHARACTERS TO THE TABLE
+  Characters negotiate when there is a reason for them to need each other. The
+  reasons are the substance of the system, and they are the same reasons found in
+  any real negotiation:
+
+    A CLAIM OR TITLE      Someone believes they are owed something.
+    A BORDER              Two holdings touch, and both want the edge.
+    A WAR                 An alliance, a truce, a subsidy, a peace.
+    A DEBT                Money owed, and the ability to refuse a loan.
+    A FAITH OR CULTURE    Shared identity, or a rivalry sharpened by it.
+    KINSHIP               Marriage, inheritance, a hostage, a vendetta.
+    ACCESS                Trade routes, a port, a mountain pass, a ford.
+
+  A pair with none of these does not negotiate, and the player should never see
+  them try. This is the same relevance rule as section 5 and as marriage in 6.5,
+  applied to negotiation - and it is what keeps the diplomacy layer affordable
+  without starving the player of it.
+
+THE WORLD COMES TO THE PLAYER
+  Approaches arrive unprompted. Envoys present offers, refusals, provocations and
+  invitations without the player having gone looking, and - importantly -
+  IGNORING an approach is itself an answer with a cost. A neglected suitor, an
+  unanswered insult or an expired treaty is a decision, and the world should treat
+  it as one.
+
+  This matters because it is what stops diplomacy from being a menu the player
+  opens when they feel like it. Under Pillar 2 the player's attention is already
+  the scarce resource; making them seek out every negotiation would mean the
+  world only exists while they look at it, which section 5 identifies as the
+  failure mode of simulating nothing off-screen.
+
+  What the player can still do is refuse to be available - by being away, at
+  war, or on a long errand. That is a way of paying in days to avoid a
+  conversation, which is precisely the section 4 trade.
+
+BREAKING AN AGREEMENT
+  An agreement is not a flag that is set and never queried. Breaking one costs
+  opinion with everyone who knew about it, which is more expensive the more
+  parties and witnesses the agreement had - and that difference is the whole
+  design. A private understanding broken quietly is cheap; a public treaty broken
+  before two realms is a catastrophe.
+
+  This is Pillar 4 working through opinion rather than through a subtraction. The
+  player is not fined for betrayal, they are simply never trusted again by the
+  people who watched.
+
+WHAT IS MISSING
+  - Nothing. Vassalage exists as a title relationship and an opinion modifier,
+    and there is no diplomacy layer at all - no marriages, alliances, tributes,
+    non-aggression pacts or wars between realms.
+  - There is no negotiation system for any character, AI or player.
+
+OPEN QUESTIONS
+  - What are the negotiable instruments? Alliances, truces, tributes,
+    non-aggression, access rights, marriage contracts, dynastic pacts - and are
+    they one system with different terms, or separate actions?
+  - How long does a negotiation take, and can it be interrupted by events?
+  - Do AI characters negotiate with each other in ways the player can learn about
+    and exploit, or is the result opaque until it affects them?
+
+--------------------------------------------------------------------------------
+6.16 INTRIGUE AND SCHEMES                                [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  Intrigue is the slow, deniable alternative to acting openly. It should let a
+  character reach an outcome they could not reach legitimately, at the price of
+  months, risk of discovery, and permanent damage to their standing if it goes
+  wrong. Intrigue is a skill with nothing to spend it on today; this is what it
+  spends it on.
+
+LEVERAGE IS THE RESOURCE
+  The organising decision is that there is one currency in this system and it is
+  LEVERAGE - what you know about whom, and how much it would cost them for it to
+  be known.
+
+  Leverage accumulates passively from being a person's friend, servant, rival,
+  creditor, physician or lover. It is not spent to be gathered; it is spent to be
+  used. This is the reconciling decision between the three models that were in
+  play: secrets and leverage are the resource, schemes are what you spend them
+  on, and agents are simply the mechanism by which leverage moves.
+
+WHAT LEVERAGE BUYS
+  Schemes are attempts to convert leverage into an outcome. They should differ by
+  what they attempt and how deniable they are, and they should always cost days
+  that are longer than a council deployment:
+
+    COMPROMISE   Learn something damaging that a target would pay to keep quiet.
+    BLACKMAIL   Convert a compromise into money, a post, or a favour.
+    SEDUCE       Bind someone to you through a relationship rather than a secret.
+    SPY         Learn what leverage does not yet cover. Raises the rate at which
+                other schemes are possible.
+    POISON       Remove a rival quietly. The least deniable of the set.
+    ASSASSINATE  Remove a rival definitively. Slower, deadlier, and ruinous if
+                you are caught.
+    FORGE        Manufacture a claim, a document or a lineage. The rarest and
+                most destructive to attempt.
+
+  The ordering is not decoration. A character needs SPY before they can build
+  leverage worth blackmailing, and FORGE should be so expensive and so
+  deniability-destroying that attempting it is a decision with a dynasty attached.
+  That is the section 4 shape: each gate is a requirement the character can
+  acquire, and acquiring it takes a life.
+
+DISCOVERY IS THE COST OF ACTING
+  A scheme is discovered by suspicion, by witnesses, and by the target
+  counter-scheming - a target who suspects they are being schemed against can
+  scheme back, which is where Intrigue-as-a-skill meets Intrigue-as-a-defence.
+
+  Discovery is not a single roll. It accrues over the weeks the scheme runs, so a
+  long scheme is riskier than a short one purely through exposure. That makes the
+  time cost of Pillar 2 and the risk of the scheme the same dial, which is the
+  most elegant thing this system can do and should not be given up lightly.
+
+  Being discovered is not a failure state - see 6.22. It is a consequence: the
+  target learns, opinion collapses across everyone who hears about it, and the
+  player continues as a character who has been caught. The worst outcomes in this
+  system should be survivable and permanent, not fatal.
+
+LEGIBILITY
+  Pillar 5 applies here more than anywhere else in the document, because intrigue
+  is where a player is most likely to lose track of cause and effect. The player
+  must always be able to answer: who suspects me, who is protecting me, and what
+  exactly do I have on this person.
+
+  That means suspicion should be visible as a number rather than inferred from
+  behaviour, and leverage should be listed per target with its source. A scheme
+  the player cannot trace back to the secret that enabled it is the one failure
+  mode this system cannot have.
+
+WHAT IS MISSING
+  - Intrigue is a skill with nothing to spend it on. No leverage, no schemes,
+    no discovery, no suspicion.
+
+--------------------------------------------------------------------------------
+6.17 ARMIES AND WAR                                     [ABSENT]
+--------------------------------------------------------------------------------
+Levies can be raised and travel as formations. What happens on arrival is not
+designed.
+
+INTENT
+  Force is the ultimate expression of a claim. War should be rare, decisive and
+  expensive, and it should be a political event as much as a battle.
+
+WAR RESOLVES IN TWO LAYERS
+  Not one system but two, at different timescales. This keeps war expensive in
+  days without requiring the player to fight battles, and it means most of a war
+  is spent on the part that produces consequences.
+
+    THE CAMPAIGN    Months. Marches, sieges, supply, morale, attrition. This is
+                    where a war is actually played. A commander who besieges
+                    well wins without a battle ever being fought. Attrition,
+                    supply and season should be able to destroy an army that
+                    never lost a fight.
+
+    THE CLASH       An instant. When two armies do meet, the result resolves as
+                    an outcome weighted by force, the commander's Martial and
+                    Combat Strength, and terrain. One roll, narrated. No tactical
+                    mini-game.
+
+  The consequence is that the player's skill lies in the campaign layer -
+  choosing when to fight, where to position, how to supply - rather than in
+  battle micro-management. That fits Pillar 1: war is about the competence of a
+  character, not the reflexes of a player.
+
+  It also means a war is measured in months against a council deployment's
+  weeks and an action's days (section 5). War is the largest thing a character
+  can do, and it should cost the largest amount of time.
+
+COMMAND IS A REQUIREMENT, NOT A ROLE
+  Under section 4, leading an army should be gated on capability - Combat
+  Strength, Martial, possibly relevant traits - not on holding a title. A
+  landless knight with the right skills can lead a company. This is exactly the
+  kind of gate that only works if skills grow (6.2), so the two systems are
+  coupled.
+
+WHAT IS MISSING
+  - Arrival does nothing. Armies travel and then the existing code stops.
+  - No campaign layer at all - no supply, morale, attrition or season.
+  - No clash resolution.
+  - No casualties, and therefore no consequence for the player character beyond
+    the war's outcome. A character who wins a battle should be marked by it.
+  - No peace terms. Winning a war is the easy half; what the victor actually
+    gains is undecided. War must be costly in time, resources, and manpower.
+    Campaign outcomes (attrition, supply) should be able to decide wars without
+    battles. Peace terms need to reflect campaign results and be decided by
+    the relevant actors. Wounded characters should have recovery paths with
+    risk of permanent effects or career changes.
+
+
+
+--------------------------------------------------------------------------------
+6.18 QUESTS                                               [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  Quests are how a character acquires a direction. Without them the player is a
+  manager optimising holdings, which is the thing Pillar 1 exists to prevent.
+  A quest is a want with a deadline, and deadlines are what make a character
+  move.
+
+TWO KINDS, AND THE DISTINCTION MATTERS
+  Both kinds exist, and they are not variations on one another. Mixing them
+  produces the same mush as mixing generated and authored cultures.
+
+    GENERATED     Small, specific, and built from live world state: an unclaimed
+                  ruin, a disputed inheritance, a bandit camp blocking a road,
+                  a relic in a temple nobody has entered, a village asking for
+                  help. Infinitely varied, because every one points at
+                  something that actually exists in the world.
+
+    AUTHORED      Long, hand-written, character-specific ARCS. A vendetta that
+                  runs across a decade. A love story that crosses a war. These
+                  carry the emotional weight that a generated objective cannot,
+                  because they are about specific people the player has come to
+                  know.
+
+  The relationship between them is that authored arcs GENERATE the circumstances
+  that generated quests appear in, and completed quests can feed authored arcs.
+  A generated quest is how the player gets pulled into a village's problem; an
+  authored arc is what happens if they pull hard enough.
+
+  Generated quests are also the primary income and purpose source for the landless
+  path. See 6.19 - a landless character has no holdings to optimise, so quests
+  are not a secondary content source for them, they are the entire career.
+
+QUEST SCOPE
+  Quests attach to CHARACTERS, not to dynasties. A character's quest should end
+  with that character - died, completed, abandoned, or carried to an unhappy end -
+  while the dynasty's business is titles, claims and standing in 6.6.
+
+  This keeps the two systems from blurring. A quest is about what a person wants;
+  succession is about what a family keeps.
+
+TIME IS THE DEADLINE
+  Quests are the sharpest consumer of Pillar 2, and they should be the mechanism
+  that makes weeks and months feel like real units. A quest with a six-month
+  window that the player spends on a siege instead has lost it, and losing it
+  should be a real outcome the player can live with - because 6.22 means there is
+  no failure state, only a character who did not get what they wanted.
+
+OPEN QUESTIONS
+  - How many quests may a character hold at once? More than one is more
+    interesting, since it creates the section 3 feeling of competing
+    commitments, but it needs a hard cost in attention.
+  - Are generated quests generated per character, or generated by the world and
+    claimed by whoever is present?
+  - Do quests resolve as outcomes, or do they chain into further quests?
+
+WHAT IS MISSING
+  - All of it. No quests, no deadlines, no character-scoped goals.
+
+--------------------------------------------------------------------------------
+6.19 LANDLESS, GUILD AND MILITARY PLAY                  [ABSENT]
+--------------------------------------------------------------------------------
+INTENT
+  No single playstyle may be privileged. A character starts somewhere and
+  moves between positions over their life. A favorite knight or promising
+  individual should be able to grow into something lasting through investment -
+  titles, education, land, and personal bonds. This investment must feel
+  rewarding (building loyalty, influence, and a lasting dynasty branch) without
+  becoming exploitative.
+
+STARTING POSITIONS
+  Landless    No titles. Survives on quest rewards, service, wages or patronage.
+              No court, no council. Must earn Renown to acquire land.
+  Knight      Landed minor noble. Serves a liege, fights his wars, gains land
+              and renown through service. Martial and Combat Strength lead.
+  Ruler       Holds a title. Council, court, diplomacy, governance.
+              Stewardship, Diplomacy and Learning lead.
+  Adventurer  Joins a guild, mercenary company or holy order. Takes contracts
+              across the world. An institution rather than a title.
+
+  These are starting positions, not classes. A landless adventurer who earns a
+  county becomes a Ruler. A Ruler can be deposed and become landless. A Knight
+  can rise to an empire.
+
+INSTITUTIONS BESIDE THE CROWN
+  The landless need somewhere to belong that is not a court. Guilds,
+  mercenary companies, holy orders and martial fellowships should exist as
+  organisations with their own ranks, reputation and perks.
+
+  They give the landless path:
+    - Income that does not depend on land
+    - Quests and contracts only members receive
+    - A social ladder orthogonal to titles
+    - A claim on land once enough Renown is earned
+
+  Houses and councils serve the landed paths. This third kind of institution
+  serves the landless one. See section 4.
+
+HOW A CHARACTER ACQUIRES LAND
+  There is no single route. Every route below is viable, and a character's
+  circumstances determine which are open to them.
+
+    CONQUEST        Take it in war. Favours the knight. Needs an army, a war,
+                    and a claim that can be pressed.
+
+    PURCHASE        Buy it outright. Favours the wealthy adventurer. Needs
+                    accumulated wealth and a willing seller.
+
+    GRANT           Be granted it by a liege, house or patron. Favours the loyal
+                    and the well-liked - this route runs directly through the
+                    opinion system.
+
+    INSTITUTION     Earn it from rank in a guild, order or company. Favours the
+                    institution player. The order owns land and grants it.
+
+    MARRIAGE        Marry into it. The classic route. Needs a match, which needs
+                    standing and usually an attractive trait.
+
+    INHERITANCE     Receive it from a relative. Needs blood and their death.
+
+    THE FAITH       Be granted it by a religious institution for service or
+                    piety. This makes religion a route to power rather than
+                    only a source of opinion, which is what makes a generated
+                    religion matter mechanically.
+
+    PETITION        Persuade a ruler to enfeoff you, by argument, gifts or
+                    reputation. This is the route that makes Diplomacy and
+                    Renown into land.
+
+  The important consequence of having many routes is that they are NOT
+  interchangeable. Each converts a different resource into land - an army,
+  money, a patron's affection, institutional rank, a marriage, blood, piety,
+  or reputation. A player who is strong on exactly one of these has a path,
+  and a player strong on none of them is in real trouble.
+
+  This is what prevents the landless path from being a slower version of the
+  landed path. The landed character already has land and needs to defend or
+  acquire more of it. The landless character must first convert some other
+  resource into standing, and which resource depends on what they are good at.
+
+ROUTES MUST EXIST, AND MUST BE SURFACED
+  Two separate obligations, and it is worth keeping them apart.
+
+  FIRST, THE ROUTE MUST EXIST AS AN OPTION AT ALL. This is a systems requirement.
+  It is entirely possible to build a land acquisition system that only offers
+  conquest and purchase, and to believe the other six routes are covered because
+  the player can theoretically end up with land. That would be wrong. Each route
+  on the list above should be a real, distinct mechanism that a character can
+  pursue. If a route is only reachable by a scripted event or a very long chain,
+  it is not a route.
+
+  SECOND, THE ROUTE MUST BE VISIBLE WHEN THE CHARACTER COULD USE IT. This is
+  mostly a UI and tutorial problem, not a systems problem - and it is not a
+  design requirement in itself. The mechanisms are:
+
+    - Surface a route when the character first becomes plausibly eligible. The
+      player should not have to already know to ask.
+    - Name the resource. A route that says "you are well regarded enough to be
+      offered land" communicates what it wants far better than "petition
+      available".
+    - Show the shortfall. If a character is one Diplomacy short or lacks the
+      renown, say so. A visible gap teaches; a hidden requirement does not.
+    - Let players see routes they do not currently qualify for. Knowing
+      petition exists and that they need reputation is more useful than a
+      locked icon with no explanation.
+
+  The design concern behind it is narrow: a player who never learns any route
+  concludes the landless path is impossible, and if they conclude that early it
+  colours how they read the whole game. That is a risk worth mitigating, but it
+  is mitigated by presentation rather than by changing the systems.
+
+CORE SYSTEMS MUST DEGRADE GRACEFULLY
+  Council, court and governance currently assume a titled character with a
+  court. Those systems should degrade rather than be unavailable for a landless
+  character. A landless character can hold a council position under a patron,
+  and can own wealth without owning land.
+
+  A character with no titles is a first-class state (See 6.19), so "every character holds a title" is false and must not leak into
+  core logic. See 6.11 - renown income currently depends on titles held.
+
+OPEN QUESTIONS
+  - What does a landless character call home, and how do they store wealth?
+  - Are institutions ranked internally the way titles are, with their own seats
+    and promotions?
+  - Can a character move between archetypes mid-campaign, and what does it
+    cost?
+
+--------------------------------------------------------------------------------
+6.20 PROCEDURALLY GENERATED CULTURE AND RELIGION       [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  Culture and religion should be GENERATED at world creation, the same way
+  terrain is generated, not authored as a fixed list. Every playthrough should
+  have its own beliefs, its own peoples, and its own incompatibilities.
+
+  The player does not author these from scratch. The player sets PARAMETERS and
+  the world builds itself. This is the same principle as terrain generation
+  applied to culture and faith.
+
+WHY GENERATED RATHER THAN AUTHORED
+  A fixed roster of four cultures and four religions cannot produce genuine
+  variety across dozens of playthroughs. Generated cultures create organic
+  opinion structures, because compatibility becomes an emergent property of
+  what was generated rather than a fixed table.
+
+THE GENERATION PARAMETERS
+  These are the sliders the player controls before world creation.
+
+    Realism      How closely generated cultures and religions resemble real-world
+                 analogues. At one extreme, generate recognisable analogues of
+                 real cultures and real historical faiths. At the other,
+                 generate arbitrary abstract cultures and belief systems. This
+                 is a continuous slider, not a preset.
+
+    Diversity    How many distinct cultures and religions exist.
+
+    Hostility    How strongly incompatible the generated groups are. Low values
+                 produce a placid world where most groups get along; high values
+                 produce a world where ancient grudges are baked in at creation.
+
+    Dogma        How doctrinal the generated faiths are. Rigid religions generate
+                 more heresy and schism; permissive ones generate more syncretism.
+
+    Naming       How cultures name themselves, their gods, their holy places.
+                 Real-world linguistic patterns, invented systems, or hybrid.
+
+    Race         How many distinct races or lineages exist, how they are
+                 distributed among cultures, and how visible they are. At the low
+                 end, one human-like baseline. At the high end, many distinct
+                 peoples with their own identities. See 6.10 - race is the
+                 archetypal imminent requirement (section 4), so this parameter
+                 controls how much of the world is fixed at birth.
+
+    Start Era    Where the world begins. A high-medieval world, an early
+                 industrial one, a post-collapse one. This is the parameter
+                 that decides which content is even relevant, and it therefore
+                 has to be set before anything else is generated.
+
+    Technology   How much of the material world works, and what is assumed to
+                 have been discovered. See 6.21 - this is one of the two
+                 parameters that decides whether the result is high fantasy,
+                 low fantasy, or neither.
+
+    Magic        Whether magic exists, how common it is, whether it is ordinary
+                 or shameful, and whether anyone knows how it works. Coupled to
+                 Technology rather than independent of it, because a world that
+                 has steam power generally has opinions about what magic is for.
+
+    Succession   How the player continues when a character dies or retires.
+                 Bloodline, permanent death, selected heir, any character, or
+                 any member of the circle. This governs the shape of an entire
+                 campaign, so it is chosen once at world creation alongside the
+                 other parameters rather than configured mid-run. See 6.6.
+
+  This is the complete set. Any system that wants to vary the world at creation
+  time does so by reading one of these, not by inventing a setting of its own -
+  see 6.21, which is the layer that depends on this one.
+
+  These parameters are all in service of one goal: a world that is coherent with
+  itself and different every time. A world where the realism slider is low, races
+  are numerous, faiths are hostile and succession is permanent should feel like a
+  recognisably different game from a placid, single-culture, bloodline world -
+  without any of those differences requiring separate content.
+
+  The same parameters should also drive how faithfuls and cultures relate to
+  TERRAIN, since the terrain affinity system already exists. Setting a desert
+  culture as expansionist and mountain-favouring should be an input to world
+  generation, not a fixed matrix.
+
+  Race, culture and religion are generated as three interacting layers rather
+  than independently. A generation pass should produce races, then distribute
+  them unevenly across cultures, then derive cultures' beliefs, values and
+  compatibility from that distribution. Generating them independently and
+  filtering afterwards would produce worlds that feel arbitrary.
+
+TERRITIAL AFFINITY AS AN OUTPUT, NOT A TABLE
+  Terrain affinity should be generated per playthrough. A culture's affinity
+  for terrain should follow from its generated parameters, so it is internally
+  consistent with the rest of what was generated.
+
+OVERRIDES AND CUSTOM CONTENT
+  Generation must never be the only option. The player should be able to:
+    - Tweak any single generated culture or religion after generation
+    - Replace any generated group entirely with a hand-authored one
+    - Add custom groups alongside generated ones
+
+  The player's authored content must be indistinguishable from generated
+  content once in the world. Nothing in the simulation should care which
+  source a culture came from.
+
+WHAT IS MISSING
+  - Everything. Culture and religion are currently a fixed list of four each,
+    assigned randomly to provinces.
+  - No generation parameters exist.
+  - Terrain affinity is a fixed preset matrix and is never called.
+  - No race layer at all. See 6.10.
+
+--------------------------------------------------------------------------------
+6.21 ANY-SETTING CUSTOMISATION                          [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  It should be possible to turn Nobles & Knights into a different game - a
+  different genre, tone, or setting - without touching code, by configuring
+  the world.
+
+  This is the strongest form of the vision: not just "medieval fantasy with
+  four cultures" but "whatever the player wants to play".
+
+THE CUSTOMISATION LAYERS
+  1. GENERATION PARAMETERS    High-level sliders, listed in full in 6.20. Realism,
+                              diversity, hostility, dogma, naming, race, start
+                              era, technology, magic and succession. They set the
+                              tone of the world before it exists.
+
+  2. FAITH AND CULTURE EDITORS  Structured editors for tenets, doctrines,
+                              practices, values and traditions. Player defines
+                              the content; the simulation reads it as data.
+
+  3. CONTENT PACKS            Importable sets of pre-authored cultures,
+                              religions, traits and events. A player can load a
+                              Roman-totalitarian pack, a Lovecraftian pack, or a
+                              post-apocalyptic pack and have a coherent world.
+
+  4. HARDCODED REALITY        Anything that assumes medieval Europe. This is the
+                              layer that must be identified and eliminated for
+                              the promise to hold.
+
+EXAMPLES OF SETTINGS THIS SHOULD SUPPORT
+  - High fantasy with multiple rival gods and genuine religious war
+  - Low fantasy where gods are unproven and faith is politics
+  - Post-apocalyptic where "cultures" are survivor communities and "religion"
+    is improvised
+  - A world with no organised religion at all
+  - A strictly secular game where faith is purely a political instrument
+
+THE SIMULATION MUST BE DATA-AGNOSTIC
+  Every system that reads culture or religion must read them as data, never as
+  a hardcoded assumption. This is the discipline that makes the promise real.
+
+  Concretely: no system may check for a religion by name, or assume a faith has
+  a clergy, or assume cultures have language-based naming. If a mechanic needs
+  one of those, it should be a property the faith or culture either has or does
+  not have.
+
+FAITH IS OPTIONAL, NOT ASSUMED
+  The examples above include a world with no organised religion at all, and a
+  strictly secular game where faith is purely a political instrument. Both are
+  commitments, and neither is keepable unless the simulation can run without a
+  religion in the world at all.
+
+  So faith is an OPTIONAL LAYER. A world may be generated with religions, or
+  with none. Where faith exists it may be institutional, or it may be a set of
+  uncoordinated local practices that nobody organises. These are different
+  worlds, not one world with the interface switched off - and the difference has
+  to be legible in play. A character in a world without clergy must have
+  something to seek instead, and whatever that is must not be a cathedral.
+
+CAPABILITY FLAGS
+  The mechanism that makes the above work is a small set of yes/no properties
+  that systems READ rather than ASSUME - the concrete form of the discipline
+  stated directly above.
+
+  Scope note: this is deliberately smaller than a full schema, which remains
+  undecided. Capability flags alone are enough to retire the promise of a
+  secular world. They are not enough to build a generator from, because a
+  generator has nothing to put in the other fields.
+
+  A faith's flags:
+
+    HAS_CLERGY          Is there an organised priesthood? A faith with clergy
+                        has somewhere to join, ranks to climb and a building to
+                        pray in. A faith without has none of these, and every
+                        institution that would serve a devout character must
+                        simply not exist for them - which removes the whole
+                        institutional path in 6.19 for such a character.
+    HAS_HOLY_PLACES     Are there consecrated sites? Shrines, temples, relics.
+    HAS_SCRIPTURE       Is there a text, and is it authoritative? Determines
+                        whether doctrine is settled or continuously negotiated.
+    CLERGY_CAN_MARRY    Whether the devout may hold office and be married at
+                        once. The game must never decide this for itself.
+    HAS_HERESY          Can a character leave, and is leaving dangerous? This
+                        is what gives 6.14's heresy system something to act on.
+                        A faith that tolerates dissent needs a different system
+                        entirely, not a heresy system with the volume turned
+                        down.
+    HAS_SCHISM          Can it split into mutually unintelligible branches?
+    ACCEPTS_CONVERSION  Can a character change faith, and at what cost? A faith
+                        that forbids it is an IMMANENT requirement (section 4),
+                        and therefore scarce by design rather than routine.
+
+  A culture's flags:
+
+    HAS_NAMING_CONVENTION
+                        Whether this culture names things systematically at all.
+                        See the Naming parameter in 6.20 - a culture without one
+                        must not be handed a hundred names to generate.
+    HAS_MARTIAL_TRADITION
+                        Whether the culture has an organised way of fighting. A
+                        culture without one cannot produce a knightly order,
+                        which closes the military-institution route in 6.19 for
+                        its characters.
+    HAS_KINSHIP         Whether kinship is tracked as descent, as household, or
+                        not at all. This determines what succession MEANS for a
+                        character in 6.6 - a culture without descent has no
+                        BLOODLINE mode available inside it.
+
+  The last flag is the sharpest example of the whole principle, and is worth
+  keeping in mind when writing any generator: HAS_KINSHIP does not vary a
+  cosmetic detail. It determines whether one of the five succession modes in
+  6.6 is a legal option in the generated world, and the generator must know that
+  before it finishes.
+
+  Every flag above is a property that is generated, defaulted or authored -
+  never a value that code assumes. A system that wants to reward devotion asks
+  HAS_CLERGY; it does not reach for a priest.
+
+OPEN QUESTIONS
+  - What is the full field list for a faith and a culture? Capability flags
+    settle the secular-world promise, but generation, editors and content packs
+    all need the rest of the fields, and nothing specifies them yet. This blocks
+    6.20 and the editors.
+
+WHAT IS MISSING
+  - No content schema. Cultures and religions are name-and-opinion-buffers.
+  - No player-facing editors of any kind.
+  - Hardcoded medieval assumptions throughout the character, council, title,
+    action and event systems.
+  - No content pack loading.
+
+--------------------------------------------------------------------------------
+6.22 FAILURE AND CONSEQUENCE                               [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  There is no loss state. The game has no "you lost" condition, no defeated
+  screen, and no point at which a campaign is ended for having played badly. What
+  a player can lose is everything they hold, and what follows that loss is
+  another playable position rather than an ending.
+
+WHAT ENDS A CAMPAIGN
+  Only the succession mode in force (6.6), and only in one case:
+
+    PERMANENT      The run ends when the player character dies. This is the
+                   entire point of the mode, and it is the only ending the game
+                   has.
+
+    BLOODLINE      Never ends. Play continues as the heir, indefinitely.
+    SELECT AN HEIR Never ends. Play continues as whichever heir is chosen.
+    CIRCLE         Never ends. Play continues as someone who was close.
+    ANY CHARACTER  Never ends. Play continues as any living character.
+
+  A run that ends for any other reason is a bug. Deposition is not death.
+  Losing a war is not death. Losing every title is not death.
+
+WHY THERE IS NO LOSS STATE
+  Pillar 4 requires that failure hurt in interesting, legible, persistent ways,
+  and explicitly rejects failure as "a subtraction from a total". A run-ending
+  loss state is precisely a subtraction from a total - it is the game checking a
+  number and ending the session when the player fails to keep it above zero. It
+  is also, structurally, a single-life design: it makes the campaign one run
+  rather than a chain of them, which is the roguelite frame 6.6 argues against
+  when it calls permanent death "closer to a permadeath roguelite".
+
+  Decisively, it would punish exactly the behaviour the pillars reward. A player
+  who presses a claim they cannot afford, or wages a war they cannot supply,
+  and loses everything has made the correct Pillar 4 decision and should get to
+  play the consequence. Ending the run punishes risk-taking with a game-over
+  screen, which teaches the player not to take risks at all.
+
+  6.19 already designs the landing. A Ruler "can be deposed and become landless",
+  and landless is a first-class starting position with its own eight routes back
+  to land. So the worst thing that can happen to a character is to be returned
+  to the game's opening position - which the player has already played once and
+  therefore already knows how to handle.
+
+WHAT LOSING ACTUALLY COSTS
+  Since nothing is subtracted from a total, the cost of total loss has to be
+  specified, or Pillar 4 is unmet and the game is merely safe.
+
+  Derived from 6.6's inheritance rules, because those rules are what make a loss
+  a loss:
+
+    TITLES AND SEATS   Gone. No council, no court, no income, no claim
+                       leverage. This is the large part of the cost.
+    HOUSE STANDING     Survives. So recovery is genuinely possible, and a
+                       dynasty that fell can be rebuilt - slowly, and from the
+                       bottom of the ladder rather than the middle.
+    RELATIONSHIPS      Do not survive. The fallen character begins with an
+                       empty social graph, and must rebuild one from nothing.
+    TIME               The real currency. Every month of rebuilding is a month
+                       not spent on the position that was lost.
+
+  That last bullet is the whole mechanism. Loss hurts because rebuilding is
+  slow, not because a counter went down. It also means the pain scales with how
+  much the player had - a ruler who falls from a great position loses more
+  months of recovery than a knight who falls from a small one - which is the
+  correct shape for a consequence.
+
+  And note what is NOT on that list: traits, skills and relationships earned
+  personally survive the fall, because they were never the ruler's property to
+  begin with. The character who lost a duchy is still the person who survived a
+  siege.
+
+WHAT THIS SETTLES ELSEWHERE
+  It removes the strongest argument for a traditional defeat condition in 6.17.
+  A war that can be lost with no possibility of run-ending consequence has to be
+  expensive in a different currency - supply, manpower, months, standing - and
+  6.17's campaign layer is where that cost has to live.
+
+OPEN QUESTIONS
+  - If a house is extinguished entirely - every title lost, no claimant, no
+    standing worth the name - does the run end, or does the player continue as
+    a character with no house at all? The latter is consistent with the above
+    and is the default assumption until decided.
+  - Under PERMANENT, does the run's end report anything? A campaign summary of
+    what the dynasty achieved across generations is a distinct question from
+    whether the run continues.
+
+--------------------------------------------------------------------------------
+6.23 LAND AND TERRAIN                                   [PARTIAL]
+--------------------------------------------------------------------------------
+INTENT
+  LAND is one of the six pillars of the design model in section 3, and until now
+  it had no entry of its own. Terrain is not scenery and not a movement tax. It
+  is the thing that decides what a piece of ground is FOR, and therefore who
+  wants it and what it is worth.
+
+TERRAIN INFLUENCES WHATEVER IT MAKES SENSE TO INFLUENCE
+  The governing principle, and deliberately a mechanism rather than a rule:
+  terrain should feed into any system where the ground plausibly matters, and
+  those connections should be added as they are found rather than nominated in
+  advance. A fixed list of terrain effects designed now would be wrong in the
+  same way a fixed list of generated cultures would be - it would not know what
+  the game grew into.
+
+  What already follows from it:
+
+    MOVEMENT       Cost and time, and whether movement is possible at all.
+                   6.13 already prefers roads and falls back to pathfinding;
+                   terrain is what it is pathfinding around.
+    YIELD          What a holding can produce, and therefore what it is worth
+                   and what it can feed.
+    BUILDING       What improvements are possible, and what they cost. Held
+                   places already have levelled improvements in 6.8.
+    DEFENCE        Where a host can be attacked, and how easily.
+    SUPPLY         What an army can eat where, and whether it can reach it.
+
+  The world is generated with varied terrain for exactly this reason: variation
+  is what makes these influences visible and worth deciding about.
+
+SUPPLIES FOLLOW THE MAP
+  Goods and armies move along the map. Production in one place can only be
+  consumed where the roads and rivers reach, and an army in the field eats from
+  whatever territory it is standing in or adjacent to.
+
+  This is what makes 6.17's campaign layer real. Attrition is not an abstract
+  monthly subtraction - it is the consequence of where an army actually is and
+  whether the land around it can feed it. A commander who besieges well can win
+  without a battle, and one who marches into empty country can lose without
+  losing a single engagement. Cutting a road is therefore a real strategic act
+  with a real cost to whoever depended on it.
+
+  It also connects this section to 6.11's economic problem. There are currently
+  no expenses and no scarcity, which means nothing in the game has to move
+  anywhere. Supply is the mechanism that makes movement matter to a character who
+  owns nothing and is not at war - which is most characters.
+
+OPEN QUESTIONS  [OPEN]
+  - How does terrain actually change? Deliberately undecided. A river silting, a
+    forest cleared for farms, a marsh drained and a war-devastated region are all
+    plausible, and any of them needs a cost, a timescale and a legibility story
+    so the player can tell permanent landscape from temporary damage.
+  - What exactly does fertility yield, and to whom? If terrain sets yield, then
+    holding land well is a real long project, and that project needs designing.
+  - How are terrain types generated, and does 6.20's terrain-affinity generation
+    decide the distribution or merely colour it in?
+
+WHAT IS MISSING
+  - Terrain exists and blocks movement, but nothing consumes it. No yield, no
+    supply, no building constraints from ground type.
+
+--------------------------------------------------------------------------------
+6.24 HEALTH, INJURY AND MORTALITY                        [ABSENT]
+--------------------------------------------------------------------------------
+INTENT
+  Health is what makes a life finite, and a finite life is what makes succession
+  matter. It also connects 6.2's open question about ageing, 6.5's child
+  mortality, and 6.17's casualties into one system rather than three accidents.
+
+  Longevity must remain uncertain. Natural mortality is a baseline. Illness,
+  wounds, and chance events can strike anyone. Care (physicians, faith-based
+  institutions, environment, resources) can improve survival odds, but never
+  guarantees it. This prevents keeping favorites alive from becoming trivial.
+
+THREE KINDS OF CONSEQUENCE, AND THE SETTING CHOOSES THE MIX
+  A wound in this game does not resolve in one way. It is weighted heavily
+  toward healing, but the severe cases are permanent, and the very severe cases
+  end a career - and which of those a player lives in is a property of the
+  generated setting rather than a constant.
+
+    HEALING          The common case. An injury costs days away from duties,
+                     perhaps a season, and then the character is what they were.
+                     This is the default weight, because most wounds in any
+                     plausible world are not serious and treating them as
+                     permanent would be both false and tedious.
+
+    PERMANENT        Serious wounds leave a lasting mark - a damaged joint caps
+                     Combat Strength for life, an illness lingers, a siege costs
+                     years. The character continues, altered, and the alteration
+                     is visible for the rest of the campaign.
+
+    CAREER-ENDING    The worst cases remove a capability entirely. A character
+                     who cannot hold a sword cannot lead a company again, no
+                     matter how much renown they have.
+
+LETHALITY IS A SETTING PROPERTY
+  This is the part that ties the three together: the rate at which wounds kill,
+  and the rate at which they leave permanent affliction, is a property of the
+  world rather than of the code. Medicine, sanitation, belief and era all bear on
+  it, which makes it a natural companion to the Start Era and Technology
+  parameters in 6.20. Care improves odds but never guarantees survival.
+
+  A generated world with poor medicine produces short lives, brutal dynasties and
+  a great deal of succession crisis. One with good medicine produces long lives and
+  a different kind of tedium - heirs who never die of fever and a dynasty that
+  outlasts the player's interest in it. Both are legitimate settings, and the
+  player should be able to feel which one they generated without being told.
+
+MORTALITY IS NOT ONLY VIOLENCE
+  Ageing, illness and childbirth kill more people than battles do, and the system
+  should say so. This is the open question in 6.2 about whether there is a hard
+  cap by age and whether physical skills decay; those questions belong here as
+  much as to 6.2, and the answer should be that age is a slow decline that
+  interacts with wounds rather than a cliff.
+
+  Childbirth and childhood illness belong here too, and they are the mechanism
+  behind 6.5's decision that children die. They should be lethal enough that a
+  large family is genuine insurance, because that is what makes heir production a
+  strategy rather than a formality.
+
+WHAT IS MISSING
+  - No health, no injury, no mortality beyond whatever ageing tick already does.
+  - No casualties in 6.17, and therefore no reason for a character to be marked
+    by a war.
+
+
+
+--------------------------------------------------------------------------------
+6.25 THE PLAYER'S VIEW                                   [DESIGN]
+--------------------------------------------------------------------------------
+INTENT
+  What the player looks at is a design obligation under Pillar 5, not a UI
+  preference. A player who cannot see why something happened cannot understand
+  the game, whatever the game is doing correctly underneath.
+
+A CONSTANT BIRDSEYE MAP
+  The map is always present and shows the whole world. The player zooms in for
+  detail and out for strategic overview, and their own character and concerns are
+  tracked with indicators on it while the surrounding world is managed through
+  interface panels rather than by scrolling.
+
+  This is the right shape for a game whose subject is a person inside a dynasty,
+  because the tension between "where am I" and "what am I responsible for" is the
+  tension of the whole game. A character is one figure on a large map they do not
+  control.
+
+WHAT THE MAP HIDES IS A PLAYER SETTING
+  The standing question is how much of the world is visible, and the honest
+  answer is that it is a setting, because the three modes support genuinely
+  different games and there is no single correct one:
+
+    FULL REVEAL            Everything visible everywhere, including who rules
+                           what and how they feel. Best for players who want a
+                           strategy game and want to plan in the open.
+
+    REVEAL, LOCAL ACTION   The whole map is visible, but the player may only
+                           act directly on their own sphere of influence.
+                           Visible does not mean actionable.
+
+    REVEAL BY CONTACT      The world starts unknown and is learned through
+                           exploration, rumour and contact. This is the mode
+                           that makes 6.8's discovery states load-bearing for the
+                           entire map rather than for caves alone.
+
+  Making this a setting rather than a decision also resolves a tension that
+  otherwise sits badly in the document. Section 5 asks whether the player should
+  be able to see the simulation's edges, and answers that it would be more honest.
+  A full birdseye map implies the player can see the whole world at once, which
+  is more than the relevance-based simulation gives them. Rather than forcing one
+  answer, the setting lets the player choose how much they are shown - and the
+  game never lies to them about what it is withholding, which is the part that
+  actually matters for legibility.
+
+  What must be honest under all three is the difference between "there is
+  something in that ruin" and "there is nothing in that ruin". Uncertainty the
+  player is told about is fair; a map that quietly lies about the world is not.
+
+WHAT THE PLAYER SEES ABOUT PEOPLE
+  Characters are shown at the fidelity their relevance earns, per section 5. A
+  relative or a spouse is a full sheet. A distant ruler is a name, a title and a
+  reported disposition. The player's own indicator should always be legible, and
+  a change in someone's opinion of the player should always be traceable to
+  something that happened - never to unexplained drift.
+
+
+
+WHAT IS MISSING
+  - No player-facing view of any kind is specified in this document, and none of
+    the above exists.
+
+================================================================================
+8. SYSTEM COVERAGE SUMMARY
+================================================================================
+
+  Characters .................... [PARTIAL]  fixed stats, no arc
+  Skill progression ............. [ABSENT]
+  Opinion / relationships ....... [LIVE]     not yet playable
+  Traits ....................... [PARTIAL]  very low content volume
+  Marriage / family / dynasty ... [DESIGN]   no family or children in code
+  Succession / inheritance ...... [DESIGN]   specified, not built
+  Councils ...................... [LIVE]     one action per role
+  Locations / discovery ......... [LIVE]     no personality
+  Actions ...................... [LIVE]     uniform, low narrative
+  Race / lineage ................ [ABSENT]
+  Economy ...................... [PARTIAL]  no expenses, landless cannot earn
+  Random events ................. [PARTIAL]  AI does not choose
+  Travel ....................... [PARTIAL]  no content in transit
+  Culture / religion / houses ... [PARTIAL]  fixed list of 4+4, randomly placed
+  Diplomacy .................... [DESIGN]   no negotiation layer at all
+  Intrigue / schemes ............ [DESIGN]   leverage economy, no code
+  Armies / war .................. [ABSENT]
+  Quests ....................... [DESIGN]   hybrid model, no code
+  Landless / guild / military ... [ABSENT]  no landless state, no institutions
+  Generated culture / religion .. [DESIGN]   parameters set, no generator
+  Any-setting customisation .... [DESIGN]   capability flags, no schema, no editors
+  Failure and consequence ...... [DESIGN]
+  Land and terrain ............. [PARTIAL]  terrain exists, nothing consumes it
+  Health / injury / mortality ... [ABSENT]
+  The player's view ............ [DESIGN]
+
+  The list above is the count. Do not summarise it elsewhere in this document,
+  and do not add a tally - a tally is a second copy that drifts.
+
+  Nothing moved from ABSENT to LIVE, and nothing should - no code was written.
+  What changed is that 6.5, 6.6, 6.15, 6.16, 6.18, 6.20, 6.21, 6.22 and 6.25 now
+  say what they intend, so they can be built from this document rather than from
+  a conversation. A [DESIGN] entry means the thinking is done and the building is
+  not - which is a different position from [ABSENT], and the difference is the
+  point of this document.
+
+  6.10 (race) is listed separately because it is a requirement kind in its own
+  right under section 4, not a detail of 6.14.

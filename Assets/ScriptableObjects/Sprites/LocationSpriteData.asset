@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95d44e371b9e49b4da7d683e2be43822, type: 3}
+  m_Name: LocationSpriteData
+  m_EditorClassIdentifier: 
+  locationSprites:
+  - locationType: 0
+    mapSprites:
+    - {fileID: -5613768292220686438, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    uiPortraits:
+    - {fileID: -4570795205544323055, guid: 7aee432a2d57f3e4b8419abd39808cab, type: 3}
+    - {fileID: 3745522521326032154, guid: 90a76ae7a86650345a602b138aafad88, type: 3}
+  - locationType: 1
+    mapSprites:
+    - {fileID: -526038148890402570, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    uiPortraits:
+    - {fileID: -8768856151172562981, guid: 3705343e7f25fd2428572f90ab269b5d, type: 3}
+    - {fileID: 6655102050203562253, guid: a338ba0250dbd0b488443b4c1ed19cc2, type: 3}
+    - {fileID: -5399578878048936367, guid: 5d604d8a51ccea7438f653582a824dde, type: 3}
+  - locationType: 2
+    mapSprites:
+    - {fileID: -146205373278286701, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    uiPortraits:
+    - {fileID: -8057203423841197661, guid: 411c39f4e405a324f809883d4cc14f2d, type: 3}
+    - {fileID: -542561815676696527, guid: fcf4b14ae8c430e4eb9dff873f4276d1, type: 3}
+  - locationType: 3
+    mapSprites:
+    - {fileID: -8444348239001633967, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    - {fileID: 3875443137326724552, guid: d8b16de19f4e05140949c5ccafcdcaa6, type: 3}
+    uiPortraits:
+    - {fileID: -6915247196269814239, guid: 92338b47c15ba5b479cd90f078dc85f5, type: 3}
+    - {fileID: 5299369375266876494, guid: 15e7ce04c2ff4eb409a5d337dd943af2, type: 3}
+  - locationType: 4
+    mapSprites:
+    - {fileID: 1270819881021999726, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    uiPortraits:
+    - {fileID: 21300000, guid: cb52c9751b1fce8488d416aae86f51ed, type: 3}
+  - locationType: 5
+    mapSprites:
+    - {fileID: -3916304558753884305, guid: d8b16de19f4e05140949c5ccafcdcaa6, type: 3}
+    uiPortraits:
+    - {fileID: -4263828017764945713, guid: 6e2f9293688dba1448f365a8a43aa048, type: 3}
+  - locationType: 6
+    mapSprites:
+    - {fileID: -2267239987810110177, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    - {fileID: -526038148890402570, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    uiPortraits:
+    - {fileID: 3684757480441681107, guid: e2d7a30cd5e2bae43b5d51531fbd897b, type: 3}
+    - {fileID: -4543295783067563664, guid: 17df1684a645a264fa19455f4e3774b2, type: 3}
+  - locationType: 7
+    mapSprites:
+    - {fileID: 2489070291636311837, guid: d8b16de19f4e05140949c5ccafcdcaa6, type: 3}
+    uiPortraits:
+    - {fileID: -3372181757182742533, guid: 33c143c3e3021d74381aa2741af72f82, type: 3}
+    - {fileID: -8880459898594391599, guid: 8d3064f2fee625240bbff8eb62045186, type: 3}
+  - locationType: 8
+    mapSprites:
+    - {fileID: -1876303746, guid: d8b16de19f4e05140949c5ccafcdcaa6, type: 3}
+    uiPortraits:
+    - {fileID: -6733212940132370767, guid: d2269c214f5b8e342bf416f14c6085b1, type: 3}
+  - locationType: 9
+    mapSprites:
+    - {fileID: 1988071585062923446, guid: d8b16de19f4e05140949c5ccafcdcaa6, type: 3}
+    - {fileID: -1759777628, guid: d8b16de19f4e05140949c5ccafcdcaa6, type: 3}
+    uiPortraits:
+    - {fileID: 6873597380529771815, guid: 7a4794857375ef14abaff701fc1eca66, type: 3}
+  - locationType: 10
+    mapSprites:
+    - {fileID: -3159475053293374520, guid: 582e489bd917ea3489d86dcd5fd9b44f, type: 3}
+    uiPortraits: []

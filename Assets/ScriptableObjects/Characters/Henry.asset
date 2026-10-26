@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d36274ff1fffeb04a8efbb7e1599b400, type: 3}
+  m_Name: Henry
+  m_EditorClassIdentifier: 
+  CharacterName: Henry
+  age: 16
+  Portrait: {fileID: -3085921802912469027, guid: 40d000c9336089b42b5fbda4754cbe2d, type: 3}
+  Spouse: {fileID: 11400000, guid: 6291ea7dc6691de438856ce7003ecc0b, type: 2}
+  Wealth: 100
+  Gender: 0
+  Stats:
+    Diplomacy: 10
+    Martial: 10
+    Stewardship: 10
+    Intrigue: 10
+    Learning: 10
+    CombatStrenght: 10
+  Traits:
+  - {fileID: 11400000, guid: 8aa56e73a84025542bc031855f06dc8a, type: 2}
+  - {fileID: 11400000, guid: 06577e677a78f8b42aade89af244baa6, type: 2}

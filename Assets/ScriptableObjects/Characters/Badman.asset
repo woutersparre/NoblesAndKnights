@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d36274ff1fffeb04a8efbb7e1599b400, type: 3}
+  m_Name: Badman
+  m_EditorClassIdentifier: 
+  CharacterName: Damien Arundel
+  age: 36
+  Portrait: {fileID: 7925996650028006064, guid: fe31e122c3b2bc24284f06f75a67450f, type: 3}
+  Spouse: {fileID: 11400000, guid: f4919f32e6f2701459b5a9a130331198, type: 2}
+  Wealth: 100
+  Gender: 0
+  Stats:
+    Diplomacy: 10
+    Martial: 10
+    Stewardship: 10
+    Intrigue: 10
+    Learning: 10
+    CombatStrenght: 10
+  Traits:
+  - {fileID: 11400000, guid: 21713d909a1f95b4ebb52a26be0c5b5f, type: 2}
+  - {fileID: 11400000, guid: 06577e677a78f8b42aade89af244baa6, type: 2}
